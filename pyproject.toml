@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-core-project"
+version = "0.1.0"
+description = "AI core project: environment checks and F101 YOLO benchmark"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "ultralytics==8.4.164",
+  "llama-cpp-python==0.3.34",
+  "fastapi==0.141.1",
+  "uvicorn==0.54.0",
+  "huggingface-hub==2.0.0",
+  "torch==2.14.0",
+  "psutil==7.2.2",
+  "Pillow==12.3.0",
+]
+
+[project.optional-dependencies]
+docs = ["pypdf==6.21.1"]
+
+[tool.setuptools.packages.find]
+include = ["app*", "experiments*"]

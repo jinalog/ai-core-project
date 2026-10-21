@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "F101: YOLO benchmark",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "experiments.f101_yolo_benchmark",
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "justMyCode": true
+    }
+  ]
+}
