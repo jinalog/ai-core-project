@@ -24,6 +24,14 @@
       "args": ["-m", "experiments.f101_yolo_benchmark"],
       "options": {"cwd": "${workspaceFolder}"},
       "problemMatcher": []
+    },
+    {
+      "label": "F102 prompt comparison (manual)",
+      "type": "process",
+      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "args": ["-u", "-m", "experiments.f102_vlm_prompt_compare"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "problemMatcher": []
     }
   ]
 }

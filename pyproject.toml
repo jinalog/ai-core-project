@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ai-core-project"
 version = "0.1.0"
-description = "AI core project: environment checks and F101 YOLO benchmark"
+description = "AI core project: environment checks, F101 YOLO and F102 VLM experiments"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "ultralytics==8.4.164",
