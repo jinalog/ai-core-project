@@ -271,6 +271,14 @@ obstacle·marker 클래스의 의미가 다르다는 비교 한계도 상세 문
 
 ## UI-01 동작과 브라우저 검증
 
+![UI-01 실제 YOLO·VLM 분석 완료 화면](docs/images/ui01-desktop.png)
+
+실제 Chrome에서 교육용 샘플 이미지를 분석한 화면이다. 왼쪽에는 선택한 이미지와 YOLO의
+bbox·객체명·confidence를, 오른쪽에는 객체별 개수와 한국어 장면 설명·서버 처리 시간을 표시한다.
+화면에서는 `bus 1개, person 4개`가 검출됐고, VLM 설명은 약 117.17초 후 표시됐다.
+하단의 YOLO 분석·VLM 설명·함께 분석 버튼으로 모델을 개별 또는 동시에 실행할 수 있다.
+이 이미지는 실제 검증 캡처이며 설명 내용의 정확성을 보증하는 정답 화면은 아니다.
+
 `ui01/`에 HTML·CSS·JavaScript와 서버 확장 코드를 분리했다. 프런트엔드 빌드 없이 동작하며
 기존 모델 로더·캐시·락·스레드풀을 재사용한다. 기본 API 응답은 유지한다.
 UI의 YOLO 요청만 `?include_detections=true`를 지정해 detections와 원본 image_width/image_height를 추가로 받는다.
@@ -294,5 +302,6 @@ JPEG는 최대 10 MiB·2천만 픽셀을 허용한다. 빈 파일·비JPEG·손�
 ```
 
 각 출력 폴더는 존재하지 않는 새 경로여야 한다. 다른 Chrome 경로는 `--browser`로 지정한다.
-스크린샷·응답 원문·검증 보고서는 비공개 `artifacts/ui01/`에 저장한다.
+스크린샷·응답 원문·검증 보고서의 원본은 비공개 `artifacts/ui01/`에 저장한다.
+사용자가 README 삽입을 요청한 위 데스크톱 캡처만 `docs/images/ui01-desktop.png`에 별도로 포함한다.
 [UI-01 구현·테스트·보존 검증](docs/ui01_validation.md)을 참조한다.
