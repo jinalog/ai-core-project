@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>시각 인식 실험실 · AI Core</title>
+  <link rel="stylesheet" href="/ui-assets/style.css">
+  <script src="/ui-assets/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/">AI CORE <span>VISION LAB</span></a><a href="/docs">API 문서 ↗</a></header>
+  <main>
+    <div class="heading"><div><p class="eyebrow">UI-01 · MULTIMODAL PLAYGROUND</p><h1>한 장의 이미지, 두 가지 시선.</h1><p class="intro">YOLO는 객체를 찾고, VLM은 장면을 설명합니다.</p></div><span class="local-badge">로컬 분석</span></div>
+    <div id="notice" class="notice" role="status" aria-live="polite">JPEG 이미지를 선택해 시작하세요.</div>
+    <div class="workspace">
+      <section class="panel image-panel" aria-labelledby="image-title">
+        <div class="panel-heading"><h2 id="image-title">01 <span>이미지</span></h2><span id="file-info">JPEG · 최대 10 MiB</span></div>
+        <label id="drop-zone" class="drop-zone" for="image-file">
+          <span class="upload-symbol" aria-hidden="true">＋</span><strong>이미지를 선택하거나 여기에 놓으세요</strong><span>JPEG · 최대 2천만 픽셀</span>
+          <input id="image-file" type="file" accept="image/jpeg,.jpg,.jpeg" aria-label="JPEG 이미지 선택">
+        </label>
+        <div id="preview-frame" class="preview-frame" hidden><img id="preview" alt="선택한 이미지 미리보기"><canvas id="bbox-canvas" aria-label="검출 객체 바운딩 박스"></canvas></div>
+        <div class="image-footer"><span id="dimensions">업로드 전 브라우저에서 미리볼 수 있습니다.</span><button id="clear" class="text-button" disabled>선택 지우기</button></div>
+        <div class="actions"><button id="run-yolo" disabled>YOLO 분석</button><button id="run-vlm" disabled>VLM 설명</button><button id="run-both" class="primary" disabled>함께 분석 <span aria-hidden="true">↗</span></button></div>
+        <button id="cancel" class="cancel" hidden>브라우저 응답 대기 취소</button>
+        <p class="fine-print">이미지는 추론 요청에만 사용하며 이 화면에서 파일로 저장하지 않습니다. VLM은 CPU에서 수 분이 걸릴 수 있습니다.</p>
+      </section>
+      <div class="results">
+        <section class="panel result-card" aria-labelledby="yolo-title"><div class="panel-heading"><h2 id="yolo-title">02 <span>객체 검출</span></h2><span class="tag">YOLO11n</span></div><div class="result-meta"><span id="yolo-status">대기</span><span id="yolo-time">—</span></div><p id="yolo-summary" class="result-text">이미지에서 발견한 객체와 개수가 표시됩니다.</p><div id="object-counts" class="object-counts"></div><p class="fine-print">검출 박스와 confidence를 이미지 위에 표시합니다.</p></section>
+        <section class="panel result-card" aria-labelledby="vlm-title"><div class="panel-heading"><h2 id="vlm-title">03 <span>장면 이해</span></h2><span class="tag teal">Qwen2.5-VL-3B</span></div><div class="result-meta"><span id="vlm-status">대기</span><span id="vlm-time">—</span></div><p id="vlm-description" class="result-text">사진 속 장면을 한국어로 설명합니다.</p><p id="vlm-note" class="fine-print">생성된 설명에는 부정확한 내용이 포함될 수 있습니다.</p></section>
+      </div>
+    </div>
+    <footer>YOLO11n + Qwen2.5-VL-3B <span>이미지를 선택해 두 모델의 결과를 비교하세요.</span></footer>
+  </main>
+</body>
+</html>

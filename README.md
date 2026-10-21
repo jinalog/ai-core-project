@@ -1,15 +1,41 @@
 # AI 코어 프로젝트
 
-Python 3.12 기반 멀티모달 인식 프로젝트. 최종 목표는 F101~F106이며 현재는 **환경 구성·F101·F102·F103을 구현**했다.
-요구사항은 로컬 `16-C-2-01.pdf` 3~5쪽을 확인했다. 교육 원문·제공 소스·모델·이미지를
-복제하거나 공개하지 않으며 기존 `source/`, `models/`, `.venv/`를 보존한다.
+Python 3.12 기반 멀티모달 인식 프로젝트. 최종 목표는 F101~F106이며 현재는 **F101~F104 구현·실측과 UI-01 웹 UI 검증을 완료**했다.
+교육 원문·제공 소스·모델·실습 이미지는 Git 추적 및 공개 대상에서 제외한다.
+기존 `source/`, `models/`, `.venv/`를 재사용하며, F104는 원본 보호를 위해 비공개 작업 사본에서 실행한다.
+
+## 현재 상태
+
+| 범위 | 상태 | 상세 기록 |
+|---|---|---|
+| F101 YOLO confidence sweep·성능 측정 | 구현·실측 완료 | [F101 검증](docs/f101_validation.md) |
+| F102 VLM 설명·프롬프트·재현성 비교 | 구현·실측 완료 | [F102 검증](docs/f102_validation.md) |
+| F103 FastAPI·지연 로딩·순차/병렬 측정 | 구현·실측 완료 | [F103 검증](docs/f103_validation.md) |
+| F104 데모 데이터 기본 파인튜닝·전후 비교 | 구현·실측 완료, conf=0.25 무검출 | [F104 검증](docs/f104_validation.md) |
+| UI-01 이미지 업로드·bbox·장면 설명 | 구현·Chrome 검증 완료 | [UI-01 검증](docs/ui01_validation.md) |
+| F105~F106 | 미구현 | 실제 환경 데이터·파인튜닝 개선·VLM 최적화 예정 |
+
+## 웹 UI 빠른 시작
+
+프로젝트 루트에서 기존 가상환경으로 실행한다.
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn ui01.server:app --host 127.0.0.1 --port 8001 --workers 1 --timeout-graceful-shutdown 660
+```
+
+[웹 UI](http://127.0.0.1:8001/)에서 JPEG를 선택하면 업로드 전 미리보기를 볼 수 있다.
+YOLO 분석, VLM 설명, 함께 분석을 지원하며 객체 종류·개수·bbox·confidence와 한국어 설명·처리 시간을 표시한다.
+진행 중에는 경과 시간을 표시하고 중복 실행을 막는다. CPU VLM은 수 분 걸릴 수 있다.
+
+UI 진입점은 **`ui01.server:app`**이다. 기존 **`app.main:app`**은 API 전용으로 유지한다.
+8001은 기존 8000 서버와의 충돌을 피하기 위한 예시 포트다. 일반 사용 시 필요한 서버 인스턴스 하나만 실행한다.
 
 ## 광고 심사 확장 구상
 
 ![멀티모달 AI 광고 심사 자동화 PoC Workflow](docs/images/ad-review-workflow.png)
 
-사용자가 제공한 광고 심사 확장 구상도다. 현재 구현 완료 범위는 F101·F102·F103이며,
-FastAPI 인식 통합은 F103에서 구현하며, 그림의 정책 RAG·LLM 심사·재심사·모니터링은 향후 구현 구상이다.
+사용자가 제공한 광고 심사 확장 구상도다. 현재는 F101~F104와 UI-01을 구현했다.
+FastAPI 인식 통합을 제공하며, 그림의 정책 RAG·LLM 심사·재심사·모니터링은 향후 구현 구상이다.
 
 ## 환경 준비
 
@@ -100,11 +126,13 @@ VLM 본체와 mmproj는 `models/`에 있으며 F102 비교 스크립트에서 �
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-단위 테스트는 가짜 모델·시계·메모리로 계산·워밍업 분리·CSV·누락/손상 입력 처리를 검증한다.
-임시 테스트 파일을 실제 측정으로 사용하지 않는다. 실제 모델 실행 결과는 별도로 기록했다.
+현재 **총 41개 테스트가 통과**했다(F101~F104 37개 + UI 확장 API 4개).
+단위 테스트는 가짜 모델·시계·메모리와 임시 파일을 사용하며 실제 성능 측정으로 취급하지 않는다.
+별도로 Chrome에서 모의 응답 UI 검증과 실제 YOLO·VLM API를 사용한 화면 검증을 수행했다.
+실제 모델 실행 결과와 브라우저 검증 범위는 각 상세 문서에 기록했다.
 
-환경 점검과 F101 실측을 완료했으며 F102·F103의 실행 방법은 아래와 같다. F104(파인튜닝), F105(직접 촬영 데이터),
-F106(최적화)은 다음 단계이며 현재 구현하지 않았다. F105~F106은 명세서에서 심화로 분류하지만
+환경 점검과 F101~F104 실측을 완료했다. F105(직접 촬영 데이터), F106(최적화)은 아직 구현하지 않았다.
+F105~F106은 명세서에서 심화로 분류하지만
 사용자 요청에 따라 전체 프로젝트의 목표 범위에 포함한다.
 
 `.gitignore`에서 가상환경·모델·교육자료·입력·로컬 결과를 제외했다.
@@ -203,4 +231,68 @@ Uvicorn의 graceful shutdown 660초는 종료 시 대기 한도이며 요청 실
 설정은 `.env.example`의 F103 항목을 참고하되 CLI에서는 프로세스 환경변수로 지정한다.
 
 [F103 구현·실측 검증 기록](docs/f103_validation.md)을 참조한다.
-F101·F102 기존 문서·코드·측정 파일은 보존하며 F104~F106과 광고 정책 RAG는 구현하지 않았다.
+F101~F103 기존 문서·코드·측정 파일은 보존한다. F104 실행 방법은 아래와 같으며 F105~F106과 광고 정책 RAG는 미구현이다.
+
+## F104 기본 파인튜닝
+
+기존 교육용 데이터셋 `source/2회차_day1/dataset/data.yaml`은 obstacle·marker 2개 클래스,
+train 40장·val 10장의 **합성 도형 데이터**다. 실제 촬영 데이터로 간주하지 않는다.
+라벨 짝·클래스·정규화 좌표·분포를 검증한 뒤 독립적인 작업 사본을 만들어 학습한다.
+교육 원본과 기존 라벨 캐시는 수정하지 않는다.
+
+```powershell
+.\.venv\Scripts\python.exe -m experiments.f104_dataset_validate
+.\.venv\Scripts\python.exe -u -m experiments.f104_finetune --epochs 10 --imgsz 320 --batch 8 --device cpu --seed 42
+```
+
+검증 → 작업 사본 생성 → 사전 평가 → 학습 → best.pt 사후 평가를 순서대로 실행한다.
+실제 CPU 10에포크 학습은 **29.621초**였으며 `best.pt` 생성과 같은 val 10장 사용을 확인했다.
+
+| conf | 학습 전 mAP50 | 학습 후 mAP50 | 학습 후 mAP50–95 |
+|---:|---:|---:|---:|
+| 0.001 | 0 | 0.79817 | 0.56064 |
+| 0.25 | 0 | 0 | 0 |
+
+학습 후 최고 confidence는 **0.03938**로, 운영 conf=0.25에서는 검출이 없다.
+낮은 conf의 mAP 향상을 운영 성능 통과로 판단하지 않는다. 사전학습 COCO 클래스와 학습 후
+obstacle·marker 클래스의 의미가 다르다는 비교 한계도 상세 문서에 기록했다.
+
+기본 출력은 `artifacts/f104/<run_id>/`다.
+
+- `train/weights/best.pt`, `last.pt`: 새 학습 가중치.
+- `training_history.csv`, `training_args.json`, `train/results.csv`: loss·평가 지표·실제 학습 설정.
+- `finetune_compare.csv`: 전후 × conf 0.001/0.25, 총 4행. mAP50·mAP50–95·고정 conf P/R·max_conf 포함.
+- `original_validation.json`, `staged_validation.json`, `run.json`: 파일 해시·원본/사본 검증·실행 상태와 시간.
+
+`--output-dir`을 지정하면 새 경로를 사용해야 한다. 기존 실측 폴더를 덮어쓰지 않는다.
+원본 가중치나 데이터가 없으면 자동 생성·다운로드하지 않고 오류를 기록한다.
+이 가중치를 기존 API의 기본 YOLO 모델로 자동 적용하지 않는다.
+[F104 실제 검증·해석·F105 개선 과제](docs/f104_validation.md)를 참조한다.
+
+## UI-01 동작과 브라우저 검증
+
+`ui01/`에 HTML·CSS·JavaScript와 서버 확장 코드를 분리했다. 프런트엔드 빌드 없이 동작하며
+기존 모델 로더·캐시·락·스레드풀을 재사용한다. 기본 API 응답은 유지한다.
+UI의 YOLO 요청만 `?include_detections=true`를 지정해 detections와 원본 image_width/image_height를 추가로 받는다.
+VLM은 기존 `/api/vlm-describe`를 그대로 호출한다.
+
+JPEG는 최대 10 MiB·2천만 픽셀을 허용한다. 빈 파일·비JPEG·손상 이미지와 API 오류를 표시한다.
+브라우저 취소는 응답 대기만 취소하며 서버 추론 중단을 보장하지 않는다.
+취소·600초 대기 초과 이후에는 health로 서버 유휴 상태를 확인할 때까지 새 분석을 잠근다.
+
+최종 실제 Chrome 검증에서 `bus 1개, person 4개`와 bbox 5개를 표시했고,
+함께 분석한 VLM은 약 **117.17초** 후 한국어 설명을 표시했다. 실제 응답 3개는 모두 HTTP 200이었다.
+모의 응답 검증에서는 개별/동시 분석·중복 클릭·오류·취소와 모바일 레이아웃도 확인했다.
+실제 VLM 중간 취소와 EXIF 회전 사진의 bbox 정합은 미검증이다.
+
+브라우저 자동화는 선택 의존성이다. UI 서버를 먼저 실행하고, 설치된 Chrome을 사용한다.
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r ui01/requirements-test.txt
+.\.venv\Scripts\python.exe -m ui01.browser_check --output artifacts/ui01/my_mock_check
+.\.venv\Scripts\python.exe -m ui01.browser_check --real --output artifacts/ui01/my_real_check
+```
+
+각 출력 폴더는 존재하지 않는 새 경로여야 한다. 다른 Chrome 경로는 `--browser`로 지정한다.
+스크린샷·응답 원문·검증 보고서는 비공개 `artifacts/ui01/`에 저장한다.
+[UI-01 구현·테스트·보존 검증](docs/ui01_validation.md)을 참조한다.
