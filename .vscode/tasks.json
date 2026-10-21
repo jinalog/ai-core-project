@@ -32,6 +32,22 @@
       "args": ["-u", "-m", "experiments.f102_vlm_prompt_compare"],
       "options": {"cwd": "${workspaceFolder}"},
       "problemMatcher": []
+    },
+    {
+      "label": "F103 API server (manual)",
+      "type": "process",
+      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "args": ["-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", "8000", "--workers", "1", "--timeout-graceful-shutdown", "660"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "problemMatcher": []
+    },
+    {
+      "label": "F103 API measurement (manual, fresh server)",
+      "type": "process",
+      "command": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "args": ["-u", "-m", "experiments.f103_api_latency_compare", "--timeout", "600"],
+      "options": {"cwd": "${workspaceFolder}"},
+      "problemMatcher": []
     }
   ]
 }

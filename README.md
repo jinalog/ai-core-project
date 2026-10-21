@@ -1,6 +1,6 @@
 # AI 코어 프로젝트
 
-Python 3.12 기반 멀티모달 인식 프로젝트. 최종 목표는 F101~F106이며 현재는 **환경 구성·F101·F102를 구현**했다.
+Python 3.12 기반 멀티모달 인식 프로젝트. 최종 목표는 F101~F106이며 현재는 **환경 구성·F101·F102·F103을 구현**했다.
 요구사항은 로컬 `16-C-2-01.pdf` 3~5쪽을 확인했다. 교육 원문·제공 소스·모델·이미지를
 복제하거나 공개하지 않으며 기존 `source/`, `models/`, `.venv/`를 보존한다.
 
@@ -8,8 +8,8 @@ Python 3.12 기반 멀티모달 인식 프로젝트. 최종 목표는 F101~F106�
 
 ![멀티모달 AI 광고 심사 자동화 PoC Workflow](docs/images/ad-review-workflow.png)
 
-사용자가 제공한 광고 심사 확장 구상도다. 현재 구현 완료 범위는 F101·F102이며,
-그림의 FastAPI 통합·정책 RAG·LLM 심사·재심사·모니터링은 향후 구현 구상이다.
+사용자가 제공한 광고 심사 확장 구상도다. 현재 구현 완료 범위는 F101·F102·F103이며,
+FastAPI 인식 통합은 F103에서 구현하며, 그림의 정책 RAG·LLM 심사·재심사·모니터링은 향후 구현 구상이다.
 
 ## 환경 준비
 
@@ -103,7 +103,7 @@ VLM 본체와 mmproj는 `models/`에 있으며 F102 비교 스크립트에서 �
 단위 테스트는 가짜 모델·시계·메모리로 계산·워밍업 분리·CSV·누락/손상 입력 처리를 검증한다.
 임시 테스트 파일을 실제 측정으로 사용하지 않는다. 실제 모델 실행 결과는 별도로 기록했다.
 
-환경 점검과 F101 실측을 완료했으며 F102의 실행 방법은 아래와 같다. F103(API), F104(파인튜닝), F105(직접 촬영 데이터),
+환경 점검과 F101 실측을 완료했으며 F102·F103의 실행 방법은 아래와 같다. F104(파인튜닝), F105(직접 촬영 데이터),
 F106(최적화)은 다음 단계이며 현재 구현하지 않았다. F105~F106은 명세서에서 심화로 분류하지만
 사용자 요청에 따라 전체 프로젝트의 목표 범위에 포함한다.
 
@@ -139,4 +139,68 @@ Git 저장소에는 독립 구현 코드·설정·검증 문서만 포함한다.
 구분되므로 CSV의 종료 사유·언어 표시와 reproducibility 결과도 확인한다.
 
 [F102 모델 선정·측정 설계](docs/f102_model_selection.md),
-[F102 실제 검증 결과](docs/f102_validation.md)를 참조한다. F103 이후 기능은 미구현이다.
+[F102 실제 검증 결과](docs/f102_validation.md)를 참조한다. F103 실행 방법은 아래에 있다.
+
+## F103 FastAPI PoC
+
+기존 가상환경을 사용하며 HTTP 측정·테스트 의존성 `httpx==0.28.1`을 추가했다.
+현재 환경에는 이미 설치되어 있다. 서버는 단일 워커로 실행한다.
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --timeout-graceful-shutdown 660
+```
+
+API는 multipart가 아닌 **원본 JPEG 바이트**를 받는다. `Content-Type: image/jpeg`를 사용한다.
+
+| 경로 | 응답 |
+|---|---|
+| `GET /api/health` | 모델별 unloaded/loading/loaded/failed 상태, 로딩·추론 횟수, 비민감 실행 설정 |
+| `POST /api/yolo-detect` | `summary`, `elapsed_ms` |
+| `POST /api/vlm-describe` | `description`, `elapsed_ms` |
+
+```powershell
+curl.exe http://127.0.0.1:8000/api/health
+curl.exe -H "Content-Type: image/jpeg" --data-binary "@source/2회차_day1/samples/sample.jpg" http://127.0.0.1:8000/api/yolo-detect
+curl.exe --max-time 600 -H "Content-Type: image/jpeg" --data-binary "@source/2회차_day1/samples/sample.jpg" http://127.0.0.1:8000/api/vlm-describe
+```
+
+빈 입력·손상 JPEG·다른 형식·용량/픽셀 제한 초과는 HTTP 400 `{"error":"..."}`다.
+기본 제한은 10 MiB, 2천만 픽셀이다. 모델 로딩 실패·락 대기 시간 초과는 503,
+추론 내부 오류는 500이다. 자세한 예외는 서버 로그에 남기고 응답에는 파일 경로 등을 노출하지 않는다.
+초기화 실패는 캐시하므로 파일·환경을 수정한 뒤 서버를 재시작한다.
+
+모델은 요청 시에만 로딩한다. 모델별 초기화 락과 추론 락을 사용하며 VLM 인스턴스의
+동시 추론은 직렬화한다. YOLO도 자체 락으로 공유 predictor를 보호한다.
+두 모델 사이의 추론은 병렬 실행할 수 있다. JPEG 디코딩·모델 로딩·추론은
+`run_in_threadpool`에서 실행하며 health는 모델 로드를 유발하거나 추론 락을 기다리지 않는다.
+VLM은 F102의 로더와 한국어 짧은 설명 프롬프트를 그대로 재사용한다.
+
+`elapsed_ms`는 서버의 본문 읽기·JPEG 검증·모델 로딩/대기·추론을 포함하며 응답 전송은 제외한다.
+`X-Model-Inference-Ms`, `X-Model-Load-Ms`, `X-Model-Queue-Ms`, `X-Cold-Load`,
+`X-Finish-Reason` 헤더로 세부 측정을 제공한다. 추론 시간은 JPEG 검증 이후 모델 호출과
+요약/응답 추출 구간이며 JSON 전송·로딩·락 대기는 포함하지 않는다.
+잘린 VLM 응답은 원문을 유지하고 `X-Finish-Reason: length`로 식별할 수 있다.
+
+실제 API 비교는 **방금 시작한 서버**에서 별도 터미널로 실행한다.
+
+```powershell
+.\.venv\Scripts\python.exe -u -m experiments.f103_api_latency_compare --timeout 600
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+첫 YOLO·VLM 호출은 `cold_sequential`로 기록하고 워밍업으로 사용한다.
+그 다음 `warm_sequential`과 `warm_parallel`을 각각 1쌍씩 실행한다.
+이미 로드된 서버에서는 cold 측정을 거부하므로 재측정 전 서버를 재시작한다.
+출력은 실행별 `artifacts/f103/<run_id>/` 아래 `api_requests.csv` 6행,
+`api_groups.csv` 3행, `run.json`이다. 요청별 응답 원문·클라이언트 HTTP 시간·서버 처리·
+모델 추론 시간을 구분하며 부분 성공과 오류를 보존한다. `--output-dir`은 새 경로만 허용한다.
+`--base-url`과 `--image`도 지정할 수 있다.
+
+클라이언트 읽기 타임아웃은 기본 600초, 연결은 10초, 서버의 모델 락 대기는 600초다.
+Uvicorn의 graceful shutdown 660초는 종료 시 대기 한도이며 요청 실행 제한이 아니다.
+네이티브 추론 스레드를 강제 종료하는 서버 타임아웃은 구현하지 않았다. 클라이언트가 끊겨도
+진행 중인 추론과 모델 락은 안전하게 완료될 때까지 유지된다. 한 워커와 요청 수가 적은 로컬 PoC를 전제로 한다.
+설정은 `.env.example`의 F103 항목을 참고하되 CLI에서는 프로세스 환경변수로 지정한다.
+
+[F103 구현·실측 검증 기록](docs/f103_validation.md)을 참조한다.
+F101·F102 기존 문서·코드·측정 파일은 보존하며 F104~F106과 광고 정책 RAG는 구현하지 않았다.
